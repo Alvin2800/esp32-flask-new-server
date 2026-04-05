@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-# 🔹 Configuration MySQL via variables Railway
+# 🔹 Config MySQL via variables Railway
 db_config = {
     "host": os.getenv("MYSQLHOST"),
     "user": os.getenv("MYSQLUSER"),
@@ -18,7 +18,7 @@ db_config = {
 def get_db_connection():
     return mysql.connector.connect(**db_config)
 
-# 🔹 Initialisation DB
+# 🔹 Initialisation DB dès le démarrage
 def init_db():
     try:
         conn = get_db_connection()
@@ -42,14 +42,6 @@ def init_db():
     except Exception as e:
         print("❌ Erreur DB init :", e, flush=True)
 
-# ⚠️ IMPORTANT : attendre Railway avant init
-@app.before_request
-def initialize():
-    global initialized
-    if not hasattr(app, "db_initialized"):
-        init_db()
-        app.db_initialized = True
-
 # 🔹 Insertion données
 def insert_data(timestamp, temperature, humidity, emergency):
     try:
@@ -60,9 +52,7 @@ def insert_data(timestamp, temperature, humidity, emergency):
             INSERT INTO measurements (timestamp, temperature, humidity, emergency)
             VALUES (%s, %s, %s, %s)
         """
-
         cursor.execute(query, (timestamp, temperature, humidity, emergency))
-
         conn.commit()
         cursor.close()
         conn.close()
@@ -84,7 +74,6 @@ def home():
 @app.route("/data")
 def data():
     global temperature, humidity, emergency
-
     try:
         temperature = float(request.args.get("temp", 0))
         humidity = float(request.args.get("hum", 0))
@@ -131,7 +120,6 @@ def get_logs():
         """)
 
         rows = cursor.fetchall()
-
         cursor.close()
         conn.close()
 
@@ -152,4 +140,5 @@ def get_logs():
 
 # 🔹 Lancement serveur
 if __name__ == "__main__":
+    init_db()  # Création table immédiatement au démarrage
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
