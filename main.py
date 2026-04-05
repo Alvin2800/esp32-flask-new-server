@@ -42,7 +42,7 @@ def init_db():
     except Exception as e:
         print("❌ Erreur DB init :", e, flush=True)
 
-# ✅ appel ici, hors du __main__
+# ✅ Appel immédiat pour créer la table même avec Gunicorn
 init_db()
 
 # 🔹 Insertion données
@@ -87,7 +87,7 @@ def data():
         insert_data(timestamp, temperature, humidity, emergency)
 
         print("📡 Données reçues :", {
-            "timestamp": timestamp,
+            "timestamp": str(timestamp),
             "temperature": temperature,
             "humidity": humidity,
             "emergency": emergency
@@ -136,22 +136,31 @@ def get_logs():
             })
 
         return jsonify(logs)
+
+    except Exception as e:
+        print("❌ Erreur /logs :", e, flush=True)
+        return jsonify({"error": str(e)}), 500
+
+# 🔹 Test DB
 @app.route("/test-db")
 def test_db():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+
         cursor.execute("SHOW TABLES")
         tables = cursor.fetchall()
+
         cursor.close()
         conn.close()
-        return jsonify({"tables": tables})
+
+        return jsonify({
+            "tables": [table[0] for table in tables]
+        })
+
     except Exception as e:
+        print("❌ Erreur /test-db :", e, flush=True)
         return jsonify({"error": str(e)}), 500
-    
-    except Exception as e:
-        print("❌ Erreur /logs :", e, flush=True)
-        return jsonify({"error": "Erreur récupération données"}), 500
 
 # 🔹 Lancement serveur
 if __name__ == "__main__":
