@@ -136,7 +136,19 @@ def get_logs():
             })
 
         return jsonify(logs)
-
+@app.route("/test-db")
+def test_db():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SHOW TABLES")
+        tables = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify({"tables": tables})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
     except Exception as e:
         print("❌ Erreur /logs :", e, flush=True)
         return jsonify({"error": "Erreur récupération données"}), 500
