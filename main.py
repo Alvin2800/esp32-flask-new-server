@@ -42,6 +42,9 @@ def init_db():
     except Exception as e:
         print("❌ Erreur DB init :", e, flush=True)
 
+# ✅ appel ici, hors du __main__
+init_db()
+
 # 🔹 Insertion données
 def insert_data(timestamp, temperature, humidity, emergency):
     try:
@@ -140,5 +143,4 @@ def get_logs():
 
 # 🔹 Lancement serveur
 if __name__ == "__main__":
-    init_db()  # Création table immédiatement au démarrage
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
